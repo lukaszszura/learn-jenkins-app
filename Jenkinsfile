@@ -31,12 +31,12 @@ pipeline {
             }
             steps {
                 sh '''
-                    ls -la
+                    echo "Building the application..."
+                    echo "React App Version: $REACT_APP_VERSION"
                     node --version
                     npm --version
                     npm ci
                     npm run build
-                    ls -la
                 '''
             }
         }
@@ -49,6 +49,7 @@ pipeline {
             }
             steps {
                 sh '''
+                    echo "Running tests..."
                     npm test -- --detectOpenHandles
                 '''
             }
@@ -72,13 +73,9 @@ pipeline {
 
             steps {
                 sh '''
-                    # Install required dependencies
+                    echo "Deploying to staging..."
                     npm install netlify-cli node-jq
-
-                    # Verify Netlify CLI version
                     node_modules/.bin/netlify --version
-
-                    # Deploy to staging
                     echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"
                     node_modules/.bin/netlify status
                     node_modules/.bin/netlify deploy --dir=build --json > deploy-output.json
@@ -100,6 +97,9 @@ pipeline {
                 always {
                     publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Staging E2E', reportTitles: '', useWrapperFileDirectly: true])
                 }
+                unsuccessful {
+                    echo "Playwright tests failed, but proceeding to approval."
+                }
             }
         }
 
@@ -119,12 +119,12 @@ pipeline {
             }
 
             environment {
-                CI_ENVIRONMENT_URL = '270a1086-89f6-48cf-a574-95b2ff8ccb8b'
+                CI_ENVIRONMENT_URL = 'YOUR NETLIFY SITE URL'
             }
 
             steps {
                 sh '''
-                    node --version
+                    echo "Deploying to production..."
                     npm install netlify-cli
                     node_modules/.bin/netlify --version
                     echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"
