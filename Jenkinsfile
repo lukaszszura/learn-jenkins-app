@@ -103,6 +103,14 @@ pipeline {
             }
         }
 
+        stage('Approval') {
+            steps {
+                script {
+                    input message: 'Do you approve the deployment to production?', ok: 'Proceed to Production'
+                }
+            }
+        }
+
         stage('Deploy prod') {
             agent {
                 docker {
@@ -111,7 +119,7 @@ pipeline {
             }
 
             environment {
-                CI_ENVIRONMENT_URL = 'YOUR NETLIFY SITE URL'
+                CI_ENVIRONMENT_URL = '270a1086-89f6-48cf-a574-95b2ff8ccb8b'
             }
 
             steps {
