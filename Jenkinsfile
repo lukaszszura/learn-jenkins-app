@@ -72,13 +72,26 @@ pipeline {
 
             steps {
                 sh '''
+                    # Install required dependencies
                     npm install netlify-cli node-jq
+
+                    # Verify Netlify CLI version
                     node_modules/.bin/netlify --version
+
+                    # Deploy to staging
                     echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"
                     node_modules/.bin/netlify status
                     node_modules/.bin/netlify deploy --dir=build --json > deploy-output.json
+
+                    # Extract the staging URL
                     export CI_ENVIRONMENT_URL=$(node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json)
+                    if [ -z "$CI_ENVIRONMENT_URL" ]; then
+                        echo "Error: Failed to extract staging URL from deploy-output.json"
+                        exit 1
+                    fi
                     echo "Staging URL: $CI_ENVIRONMENT_URL"
+
+                    # Run Playwright tests
                     npx playwright test --reporter=html
                 '''
             }
